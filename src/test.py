@@ -19,8 +19,21 @@ def send(dev, cmd: str):
     if len(command) != 0:
         cmd += "\n"
         dev.write(0x2, cmd)
-        sleep(0.5)
-    resp = dev.read(0x81, 1_000_000, 1000)
+        
+    resp = dev.read(0x81, 1_000_000, 10000)
+    # Following lines are hack
+    # problem seems to be that after sending message multiple readout are required to get response
+    # the delay between readouts is not important, can be as short as 0.1 s
+    # seems like a problem with buffer somewhere, following while statement waits for non-empty readout
+    # thus avoiding the issue, this will come back tho  
+    # TODO find the source of this problem
+    counter = 0
+    while len(resp) == 2:
+        sleep(0.1)
+        resp = dev.read(0x81, 1_000_000, 10000)
+        counter += 1
+        if counter > 5:
+            break
     try:
         decoded = bytearray(resp).decode("utf-8")
     except Exception as ex:
