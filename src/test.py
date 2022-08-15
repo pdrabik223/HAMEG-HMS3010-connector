@@ -1,11 +1,13 @@
+from datetime import datetime
+from Requests import system
 from device import connect, send_await_resp
-from quarries.system import AutoTune, Date
 
 
 if __name__ == "__main__":
     device = connect(0x0403, 0xED72)
 
-    print(send_await_resp(device, Date()))
+    send_await_resp(device, system.Date.set(datetime(day=12, year=2013, month=1)))
+    print(send_await_resp(device, system.Date.get()))
 
     while True:
         command = input("command: ")
