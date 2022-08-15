@@ -4,8 +4,7 @@ import usb.core
 import usb.util
 import logging
 
-from quarries.system import Request
-
+from Requests.request import Request
 
 def connect(vid, pid):
     logging.debug(f"connecting do device with pid: {pid}, vid: {vid}")
@@ -38,9 +37,10 @@ def _send_str(device, command: str):
         raise
 
 
-def send_await_resp(dev, cmd: Any)->Any:
+def send_await_resp(dev, cmd: Any) -> Any:
     if isinstance(cmd, str):
         _send_str(device=dev, command=cmd)
+        
     if isinstance(cmd, Request):
         _send_str(device=dev, command=cmd._send())
 
@@ -54,7 +54,7 @@ def send_await_resp(dev, cmd: Any)->Any:
     # TODO find the source of this problem
     counter = 0
     while len(resp) == 2:
-        sleep(0.1)
+        sleep(0.2)
         resp = dev.read(0x81, 1_000_000, 10000)
         counter += 1
         if counter > 5:
