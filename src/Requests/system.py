@@ -3,26 +3,22 @@ from typing import Optional
 from Requests.request import Request
 
 SYSTEM = "SYSTEM"
+AUTO_TUNE = "AUTOTUNE"
+DATE = "DATE"
 
 
-class AutoTune(Request):
+def auto_tune_set()->str:
+    return ":".join([SYSTEM, AUTO_TUNE])
 
-    AUTO_TUNE = "AUTOTUNE"
-    mode = Request.Mode.GETTER
+def auto_tune_get():
+    pass
 
-    def __init__(self) -> None:
-        super().__init__()
+def date_set(date: datetime.date)->str:
 
-    def _send(self) -> str:
-        return ":".join([SYSTEM, self.AUTO_TUNE])
-
-    def _receive(self, response: str) -> None:
-        pass
-
-
+def date_get()->datetime.date:
+    return ":".join([SYSTEM, self.DATE]) + " ?"
 class Date(Request):
 
-    DATE = "DATE"
     
     def __init__(self, date: datetime.date = None, mode = Request.Mode.GETTER) -> None:
         super().__init__()
