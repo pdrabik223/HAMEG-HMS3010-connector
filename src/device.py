@@ -1,11 +1,10 @@
-from copyreg import constructor
 from time import sleep
 from typing import Any
 import usb.core
 import usb.util
 import logging
 
-from Requests.request import Request
+from Requests.base_request import Request
 class Device:
     
     def __init__(self, device) -> None:

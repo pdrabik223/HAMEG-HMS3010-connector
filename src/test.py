@@ -1,16 +1,17 @@
 from datetime import datetime
 from Requests import system
-from device import connect, send_await_resp
+from device import Device
 
 
 if __name__ == "__main__":
-    device = connect(0x0403, 0xED72)
+    dev = Device.connect_using_vid_pid(idVendor= 0x0403,idProduct= 0xED72)
 
-    send_await_resp(device, system.Date.set(datetime(day=12, year=2013, month=1)))
-    print(send_await_resp(device, system.Date.get()))
+    print(dev.send_await_resp(system.Date.receive()))
+    print(dev.send_await_resp(system.Date.send(datetime(year=2011,month=11,day=2))))
+    
 
-    while True:
-        command = input("command: ")
-        resp = send_await_resp(device, command)
-        print(f"response: {resp[0]}")
-        print(f"          {resp[1]}")
+    # while True:
+    #     command = input("command: ")
+    #     resp = dev.send_await_resp(command)
+    #     print(f"response: {resp[0]}")
+    #     print(f"          {resp[1]}")
