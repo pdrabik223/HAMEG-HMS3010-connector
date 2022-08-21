@@ -1,100 +1,165 @@
-from copyreg import constructor
 import datetime
+from statistics import mode
 from typing import Optional
-from Requests.request import Request
+from requests.base_request import Request
+from requests.utils import handle_response, get_or_raise
 
-SYSTEM = "SYSTEM"
+SYSTEM_HEADER = "SYSTEM"
 
 
 class AutoTune(Request):
-    """
-    force Auto Tune on device, this action takes couple of seconds
-    Setter mode:
-        activate auto tune procedure on device
-        
-        example:
-        ```
-        dev.send_await_resp(system.AutoTune.send()) 
-        ```
-    """
-    AUTO_TUNE = "AUTOTUNE"
-    mode=Request.Mode.SETTER
+    COMMAND = "AUTOTUNE"
+    mode = Request.Mode.SETTER
 
     @staticmethod
-    def send()->None:
+    def send() -> None:
+        """
+        Request Auto Tune on device, this action takes couple of seconds
+
+        Example:
+            dev.send_await_resp(system.AutoTune.send())
+
+        Returns:
+            _type_: _description_
+        """
         return AutoTune()
 
     def __init__(self) -> None:
         super().__init__()
 
     def _send(self) -> str:
-        return ":".join([SYSTEM, self.AUTO_TUNE])
-
-    def _receive(self, response: str) -> None:
-        pass
-
-class Date(Request):
-    """
-    Date control on device
-    
-    Setter mode:
-        set specified date to device
-        
-        example:
-        ```
-        dev.send_await_resp(system.Date.send(datetime(year=2011,month=11,day=2))) 
-        ```
-        
-    Getter mode:
-        read current date from device
-        
-        example:
-        ```
-        print(dev.send_await_resp(system.Date.get()))
-        ```
-    """
-    DATE = "DATE"
-            
-    @staticmethod
-    def get():    
-        return Date(mode=Request.Mode.GETTER)
-    
-    @staticmethod
-    def send(new_date: datetime.date):
-        if not isinstance(new_date, datetime.date):
-            raise TypeError(f"new_date has incorrect type, expected datetime.date got {type(datetime.date)}")
-        return Date(date=new_date, mode=Request.Mode.SETTER)
-    
-    
-    def __init__(self, date: datetime.date = None, mode = Request.Mode.GETTER) -> None:
-        super().__init__()
-        self.mode = mode
-        if mode == Request.Mode.SETTER:
-            self.date: datetime.date = date
-
-    def _send(self) -> str: 
-        if self.mode == Request.Mode.GETTER:
-            return ":".join([SYSTEM, self.DATE]) + " ?"
-        else:
-            return ":".join([SYSTEM, self.DATE]) + " " +  \
-                   " ".join([str(self.date.year), str(self.date.month), str(self.date.day)])
+        return ":".join([SYSTEM_HEADER, self.COMMAND])
 
     def _receive(self, response: str) -> Optional[datetime.date]:
-        
-        if response[0:2] != "1`":
-            raise ConnectionError("general response error")
-        response = response[2:-1]
-        
+        return handle_response(response, 0, None, self.mode)
+
+
+class Date(Request):
+    #    Date control on device
+
+    COMMAND = "DATE"
+
+    def __init__(self, date: datetime.date = None, mode=Request.Mode.GETTER) -> None:
+        super().__init__()
+        self.mode = mode
+        self.date = date
+
+    @staticmethod
+    def receive():
+        """
+        Read current date from device in datetime.date format
+
+        Example:
+            print(dev.send_await_resp(system.Date.receive()))
+
+        Returns
+            Date: getter object for date
+        """
+        return Date(mode=Request.Mode.GETTER)
+
+    @staticmethod
+    def send(new_date: datetime.date):
+        """
+        set specified date to device
+
+        Args:
+            new_date (datetime.date): new date
+
+        Example:
+            dev.send_await_resp(system.Date.send(datetime(year=2011,month=11,day=2)))
+        Returns:
+            Date: setter object for date
+        """
+        new_date = get_or_raise(new_date, datetime.date, "new_date")
+        return Date(date=new_date, mode=Request.Mode.SETTER)
+
+    def _send(self) -> str:
         if self.mode == Request.Mode.GETTER:
-        
-            if len(response) == 0:
-                raise ConnectionError("received empty response")
-
-            response_parameters = response.split(",")
-
-            return datetime.date(
-                year=int(response_parameters[0]),
-                month=int(response_parameters[1]),
-                day=int(response_parameters[2]), )
+            return ":".join([SYSTEM_HEADER, self.COMMAND]) + " ?"
         else:
-            return None
+            return (
+                ":".join([SYSTEM_HEADER, self.COMMAND])
+                + " "
+                + " ".join(
+                    [str(self.date.year), str(self.date.month), str(self.date.day)]
+                )
+            )
+
+    def _receive(self, response: str) -> Optional[datetime.date]:
+
+        return handle_response(
+            response,
+            3,
+            cast_func=lambda param_list: datetime.date(
+                year=int(param_list[0]),
+                month=int(param_list[1]),
+                day=int(param_list[2]),
+            ),
+            mode=self.mode,
+        )
+
+
+class Time(Request):
+    #    Time control on device
+
+    COMMAND = "TIME"
+
+    def __init__(self, time: datetime.time = None, mode=Request.Mode.GETTER) -> None:
+        super().__init__()
+        self.mode = mode
+        self.time = time
+
+    @staticmethod
+    def receive():
+        """
+        Read current time from device in datetime.time format
+
+        Example:
+            print(dev.send_await_resp(system.Time.receive()))
+
+        Returns
+            Time: getter object for time
+        """
+        return Time(mode=Request.Mode.GETTER)
+
+    @staticmethod
+    def send(new_time: datetime.time):
+        """
+        set specified date to device
+
+        Args:
+            new_date (datetime.time): new time
+
+        Example:
+            dev.send_await_resp(system.Time.send(datetime(hour=16,minute=12,second=10)))
+
+        Returns:
+            Time: setter object for time
+        """
+        new_time = get_or_raise(new_time, datetime.datetime, "new_time")
+        return Time(time=new_time, mode=Request.Mode.SETTER)
+
+    def _send(self) -> str:
+        if self.mode == Request.Mode.GETTER:
+            return ":".join([SYSTEM_HEADER, self.COMMAND]) + " ?"
+        else:
+            return (
+                ":".join([SYSTEM_HEADER, self.COMMAND])
+                + " "
+                + " ".join(
+                    [str(self.time.hour), str(self.time.minute), str(self.time.second)]
+                )
+            )
+
+    def _receive(self, response: str) -> Optional[datetime.time]:
+
+        return handle_response(
+            response,
+            3,
+            cast_func=lambda param_list: datetime.time(
+                hour=int(param_list[0]),
+                minute=int(param_list[1]),
+                second=int(param_list[2]),
+            ),
+            mode=self.mode,
+        )

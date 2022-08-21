@@ -4,17 +4,18 @@ import usb.core
 import usb.util
 import logging
 
-from Requests.base_request import Request
+from requests.base_request import Request
+
+
 class Device:
-    
     def __init__(self, device) -> None:
         self.device = device
         self.device.set_configuration()
-        
+
     @staticmethod
     def connect_using_vid_pid(idVendor, idProduct):
         logging.debug(f"connecting do device with pid: {idProduct}, vid: {idVendor}")
-        
+
         device = usb.core.find(idVendor=idVendor, idProduct=idProduct)
         if device is None:
             raise ValueError("Device is not found")
@@ -38,13 +39,12 @@ class Device:
             logging.error(f"error occurred while writing to device", exc_info=True)
             raise
 
-
     def send_await_resp(self, cmd: Any) -> Any:
         if isinstance(cmd, str):
             self._send_str(command=cmd)
 
         if isinstance(cmd, Request):
-            self._send_str( command=cmd._send())
+            self._send_str(command=cmd._send())
             if cmd.mode == Request.Mode.SETTER:
                 return
 
