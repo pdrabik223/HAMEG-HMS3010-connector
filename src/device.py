@@ -39,15 +39,7 @@ class Device:
             logging.error(f"error occurred while writing to device", exc_info=True)
             raise
 
-    def send_await_resp(self, cmd: Any) -> Any:
-        if isinstance(cmd, str):
-            self._send_str(command=cmd)
-
-        if isinstance(cmd, Request):
-            self._send_str(command=cmd._send())
-            if cmd.mode == Request.Mode.SETTER:
-                return
-
+    def _await_resp(self):
         resp = self.device.read(0x81, 1_000_000, 10000)
 
         # Following lines are hack
@@ -65,12 +57,29 @@ class Device:
                 break
 
         try:
-            decoded = bytearray(resp).decode("utf-8")
+            return (resp, bytearray(resp).decode("utf-8"))
         except Exception as ex:
             return (resp, f"fail with error message: {str(ex)}")
 
-        if isinstance(cmd, str):
-            return (resp, decoded)
+    def _handle_request(self, cmd: Request):
+        self._send_str(command=cmd._send())
+
+        _, decoded = self._await_resp()
+
+        return cmd._receive(decoded)
+
+    def _handle_str(self, cmd: str):
+
+        self._send_str(command=cmd)
+
+        resp, decoded = self._await_resp()
+
+        return (resp, decoded)
+
+    def send_await_resp(self, cmd: Any) -> Any:
 
         if isinstance(cmd, Request):
-            return cmd._receive(decoded)
+            return self._handle_request(cmd)
+
+        if isinstance(cmd, str):
+            return self._handle_str(cmd)
