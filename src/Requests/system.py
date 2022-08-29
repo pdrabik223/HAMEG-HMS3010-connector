@@ -35,7 +35,7 @@ class AutoTune(Request):
 
 
 class Date(Request):
-    #    Date control on device
+    # Date control on device
 
     COMMAND = "DATE"
 
@@ -67,6 +67,7 @@ class Date(Request):
 
         Example:
             dev.send_await_resp(system.Date.send(datetime(year=2011,month=11,day=2)))
+            
         Returns:
             Date: setter object for date
         """
@@ -75,7 +76,7 @@ class Date(Request):
 
     def _send(self) -> str:
         if self.mode == Request.Mode.GETTER:
-            return ":".join([SYSTEM_HEADER, self.COMMAND]) + " ?"
+            return ":".join([SYSTEM_HEADER, self.COMMAND]) + " ?\n"
         else:
             return (
                 ":".join([SYSTEM_HEADER, self.COMMAND])
@@ -83,6 +84,7 @@ class Date(Request):
                 + " ".join(
                     [str(self.date.year), str(self.date.month), str(self.date.day)]
                 )
+                +"\n"
             )
 
     def _receive(self, response: str) -> Optional[datetime.date]:
@@ -91,9 +93,9 @@ class Date(Request):
             response,
             3,
             cast_func=lambda param_list: datetime.date(
-                year=int(param_list[0]),
-                month=int(param_list[1]),
-                day=int(param_list[2]),
+                year    =int(chr(param_list[0])),
+                month   =int(chr(param_list[1])),
+                day     =int(chr(param_list[2])),
             ),
             mode=self.mode,
         )
@@ -156,10 +158,10 @@ class Time(Request):
         return handle_response(
             response,
             3,
-            cast_func=lambda param_list: datetime.time(
-                hour=int(param_list[0]),
-                minute=int(param_list[1]),
-                second=int(param_list[2]),
+            cast_func  = lambda param_list: datetime.time(
+                hour   = int(param_list[0]),
+                minute = int(param_list[1]),
+                second = int(param_list[2]),
             ),
             mode=self.mode,
         )

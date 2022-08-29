@@ -6,14 +6,15 @@ from device import Device
 if __name__ == "__main__":
     dev = Device.connect_using_vid_pid(idVendor=0x0403, idProduct=0xED72)
 
-    print("current date:")
+    print(f"current date: {system.Date.receive()._send()}")
     print(dev.send_await_resp(system.Date.receive()))
 
-    print("set date to NOW!")
-    dev.send_await_resp(system.Time.send(datetime.now()))
+    print(f"set date to NOW!: {system.Date.send(datetime.now())._send()}")
+    dev.send_await_resp(system.Date.send(datetime.now()))
 
-    print("current date:")
-    print(dev.send_await_resp(system.Time.receive()))
+    print(f"current date:") #{system.Date.receive()._send()}
+    # print(f"resp: {dev.send_await_resp(system.Date.receive()._send())}")
+    print(dev.send_await_resp(system.Date.receive()))
 
     # while True:
     #     command = input("command: ")

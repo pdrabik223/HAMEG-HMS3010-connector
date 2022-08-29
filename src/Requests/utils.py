@@ -45,12 +45,22 @@ def handle_response(
     cast_func = get_or_raise(cast_func, Callable, "cast_func", True)
     mode = get_or_raise(mode, Request.Mode, "mode")
 
-    if response[:2] != "1`":
-        raise Exception("General response error")
+
+
+    if response[0] == "1":
+        response = response[1:]
+        if response[0] == "`":
+            response = response[1:]
+    else:
+        raise Exception(f"General response error, received response: {response}")
 
     if mode == Request.Mode.GETTER:
-        response = response[2:-1]
+
+        if r"\\n" in response:
+            response.replace(r"\\n","")
+        
         response = parse_to_csv(response)
+        
         try:
             if len(response) != no_params:
                 raise
@@ -58,6 +68,6 @@ def handle_response(
             return cast_func(response)
 
         except Exception as ex:
-            raise Exception("The response does not contain valid date", ex)
+            raise Exception(f"The response does not contain valid date, resp: {response}", ex)
     else:
         return None

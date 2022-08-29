@@ -12,12 +12,12 @@ class CLS(Request):
     CLS_HEADER = "CLS"
 
     @staticmethod
-    def send():
+    def send() -> "CLS":
         """
         Resets state and error list and deletes the OPC state
 
         Example:
-            dev.send_await_resp(system.CLS.send())
+            dev.send_await_resp(register.CLS.send())
 
         Returns:
             CLS: Setter for CLS command
@@ -47,7 +47,7 @@ class ESE(Request):
         self.new_seser_value = new_seser_value
 
     @staticmethod
-    def send(new_seser_value: uint8):
+    def send(new_seser_value: uint8) -> "ESE":
         """
         Reset error list and delete the OPC state
 
@@ -55,7 +55,7 @@ class ESE(Request):
             new_seser_value (uint8): new value for SES register
 
         Example:
-            dev.send_await_resp(system.ESE.send(128))
+            dev.send_await_resp(register.ESE.send(128))
 
         Returns:
             ESE: Setter for ESE command
@@ -64,19 +64,19 @@ class ESE(Request):
         return ESE(new_seser_value, mode=Request.Mode.SETTER)
 
     @staticmethod
-    def receive():
+    def receive() -> "ESE":
         """
         Get current state of error list
 
         Example:
-            dev.send_await_resp(system.ESE.receive())
+            dev.send_await_resp(register.ESE.receive())
 
         Returns:
             ESE: Getter for error list
         """
         return ESE(mode=Request.Mode.GETTER)
 
-    def _send(self) -> str:
+    def _send(self: "ESE") -> str:
         if self.mode == Request.Mode.GETTER:
             return ":".join([REGISTER_HEADER, self.ESE_HEADER]) + " ?"
         else:
